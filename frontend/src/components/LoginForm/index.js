@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import LogRocket from "logrocket";
 import Button from "../Button";
 import { useFetch } from "../Hooks/index";
 import { useHistory } from "react-router-dom";
@@ -81,7 +82,7 @@ const SignupForm = () => {
     false
   );
 
-  const { setIsAuthorized, setUser } = useAppState();
+  const { setIsAuthorized, setUser, user } = useAppState();
   const history = useHistory();
   // update application state once a user logs in
   // if either the data or the iserror is set, then set authorization
@@ -102,6 +103,11 @@ const SignupForm = () => {
     });
     // push user to profile page if logged in
     if (data?.authorized) {
+      // once a user is authorized, then log their name in the session
+      LogRocket.identify(data?.id, {
+        name: data?.name,
+        username: data?.username,
+      });
       history.push("/profile");
     }
   }, [data, isError]);

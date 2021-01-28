@@ -1,10 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import LogRocket from "logrocket";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter as Router } from "react-router-dom";
 import { PageWrapper, TodoWrapper } from "./state";
+
+// LogRocket.init("zc2cw6/my-todo-app-dev");
 
 ReactDOM.render(
   <React.StrictMode>

@@ -34,6 +34,11 @@ const TodoItemWrapper = styled.div`
 `;
 
 const GetTodos = () => {
+  console.log(
+    "YOUR CURRENT URL",
+    window.location.href,
+    window.location.pathname
+  );
   const { todos, setInitialTodos } = useTodoState();
   const { user } = useAppState();
   const { execute, data, isError } = useFetch(

@@ -48,14 +48,14 @@ const createSplunkEvent = async (resObj) => {
   try {
     // something about circular deps demands that you send the response.data
     const user = await axios.post(
-      process.env.SPLUNK_PREM_URL,
+      process.env.SPLUNK_PREM_DOCKER_URL,
       {
         event: resObj,
       },
       {
         headers: {
           // prettier-ignore
-          'Authorization': process.env.SPLUNK_PREM_HEC_TOKEN,
+          'Authorization': process.env.SPLUNK_PREM_DOCKER_HEC_TOKEN,
           "Content-Type": "application/json",
         },
       }
@@ -65,6 +65,15 @@ const createSplunkEvent = async (resObj) => {
     // console.log("hitting some error", e);
     return e;
   }
+};
+
+// this full URL is used for logrocket.
+// log rocket will provide a full url that links to a query in splunk request.url
+// however I must make sure that the data in splunk has that exact same url
+// in logrocket I specifiy Splunk's key name, and logrocket's field value
+// these two will map to each other which allows them to connect services
+const getFullUrl = (req) => {
+  return req.protocol + "://" + req.get("host") + req.originalUrl;
 };
 
 app.get("/", (req, res, next) => {
@@ -113,18 +122,20 @@ app.post("/signup", async (req, res, next) => {
     id,
   };
   const { validateUserInput } = dataValidation();
+  const fullClientUrl = getFullUrl(req);
   try {
     validateUserInput(username, password);
     const successRes = {
       headers: req.headers,
-      url: req.originalUrl,
+      // url: req.originalUrl,
+      url: fullClientUrl,
       action: "signup",
       status: "success",
       statusCode: res.statusCode,
       ...userObject,
     };
     const splunkEvent = await createSplunkEvent(successRes);
-    // console.log("SPLUNK EVENT", splunkEvent);
+    console.log("SPLUNK EVENT", splunkEvent);
     users.push(userObject);
     res.status(200).json(successRes);
   } catch (err) {
@@ -134,7 +145,8 @@ app.post("/signup", async (req, res, next) => {
     console.log("HITTING A BACKEND PROBLEM", err);
     const errorRes = {
       headers: req.headers,
-      url: req.originalUrl,
+      // url: req.originalUrl,
+      url: req.fullClientUrl,
       action: "signup",
       status: "failure",
       statusCode: res.statusCode,
@@ -151,13 +163,15 @@ app.post("/login", async (req, res, next) => {
   const { validateUserCreds, validateUserInput } = dataValidation();
   const username = req.body.username;
   const password = req.body.password;
+  const fullClientUrl = getFullUrl(req);
   try {
     validateUserInput(username, password);
     validateUserCreds(username, password);
     const user = users.filter((user) => user.username === username)[0];
     const successRes = {
       headers: req.headers,
-      url: req.originalUrl,
+      // url: req.originalUrl,
+      url: fullClientUrl,
       action: "login",
       status: "success",
       statusCode: res.statusCode,
@@ -172,7 +186,8 @@ app.post("/login", async (req, res, next) => {
     // create an errorObject to pass to my error middleware
     const errorRes = {
       headers: req.headers,
-      url: req.originalUrl,
+      // url: req.originalUrl,
+      url: req.fullClientUrl,
       action: "login",
       status: "failure",
       statusCode: res.statusCode,
@@ -200,6 +215,7 @@ app.post("/addtodo", async (req, res, next) => {
     done,
   };
   todos.push(newTodo);
+  const fullClientUrl = getFullUrl(req);
   // if I wanted to send splunk all of the user todos, I could use the getTodos successResponse object
   // it would allow me to maintain a consistent data structure
   const successResponse = {
@@ -208,7 +224,8 @@ app.post("/addtodo", async (req, res, next) => {
     done: done,
     action: "add todo",
     headers: req.headers,
-    url: req.originalUrl,
+    // url: req.originalUrl,
+    url: fullClientUrl,
     status: "success",
     statusCode: res.statusCode,
     authorized: true,
@@ -223,12 +240,14 @@ app.post("/gettodos", async (req, res, next) => {
   const userTodos = todos.filter((todo) => {
     return todo.userId === userId;
   });
+  const fullClientUrl = getFullUrl(req);
   const successResponse = {
     username: username,
     todos: userTodos,
     action: "get todos",
     headers: req.headers,
-    url: req.originalUrl,
+    // url: req.originalUrl,
+    url: fullClientUrl,
     status: "success",
     statusCode: res.statusCode,
     authorized: true,
@@ -243,13 +262,15 @@ app.put("/updatetodo", async (req, res, next) => {
     return todo.todoId === todoId;
   });
   foundTodo.done = true;
+  const fullClientUrl = getFullUrl(req);
   const successResponse = {
     username: foundTodo.username,
     todo: foundTodo.todo,
     done: foundTodo.done,
     action: "mark done",
     headers: req.headers,
-    url: req.originalUrl,
+    // url: req.originalUrl,
+    url: fullClientUrl,
     status: "success",
     statusCode: res.statusCode,
     authorized: true,
