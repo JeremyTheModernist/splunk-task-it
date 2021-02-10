@@ -48,14 +48,14 @@ const createSplunkEvent = async (resObj) => {
   try {
     // something about circular deps demands that you send the response.data
     const user = await axios.post(
-      process.env.SPLUNK_PREM_DOCKER_URL,
+      process.env.SPLUNK_PREM_URL,
       {
         event: resObj,
       },
       {
         headers: {
           // prettier-ignore
-          'Authorization': process.env.SPLUNK_PREM_DOCKER_HEC_TOKEN,
+          'Authorization': process.env.SPLUNK_PREM_HEC_TOKEN,
           "Content-Type": "application/json",
         },
       }
