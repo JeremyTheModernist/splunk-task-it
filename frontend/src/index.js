@@ -7,7 +7,7 @@ import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter as Router } from "react-router-dom";
 import { PageWrapper, TodoWrapper } from "./state";
 
-// LogRocket.init("zc2cw6/my-todo-app-dev");
+LogRocket.init("jeremys-org/splunk-todo-app");
 
 ReactDOM.render(
   <React.StrictMode>
